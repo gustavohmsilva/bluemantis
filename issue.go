@@ -14,7 +14,8 @@ type BaseIssue struct {
 }
 
 func (i *Issue) Send() bool {
-	res, err := i.Client.Do(i.request)
+	var err error
+	i.response, err = i.Client.Do(i.request)
 	if err != nil || res.StatusCode != 201 {
 		return false
 	}
