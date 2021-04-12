@@ -1,40 +1,45 @@
 package bluemantis
 
 import (
+	"net/http"
 	"reflect"
 	"testing"
 )
 
-func TestNewServer(t *testing.T) {
+func TestNewClient(t *testing.T) {
 	type args struct {
 		url   string
 		token string
 	}
 
-	connectionTest := &Server{
-		URL:   "http://localhost:8989",
-		Token: "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
+	connectionTest := &Client{
+		Client: &http.Client{},
+		URL:    "http://localhost:8989",
+		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
 	}
 
-	InvalidConnectionTest := &Server{
-		URL:   "http://localhost:8989",
-		Token: "7-EtgZGHhpONO7shfeZXwKEX66WXuE9-",
+	InvalidConnectionTest := &Client{
+		Client: &http.Client{},
+		URL:    "http://localhost:8989",
+		Token:  "7-EtgZGHhpONO7shfeZXwKEX66WXuE9-",
 	}
 
-	invalidURL := &Server{
-		URL:   "htxp://notavalid.domainname/",
-		Token: "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
+	invalidURL := &Client{
+		Client: &http.Client{},
+		URL:    "htxp://notavalid.domainname/",
+		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
 	}
 
-	invalidToken := &Server{
-		URL:   "http://localhost:8989",
-		Token: "7-EtgZGHhpONO7shfeZXxKEX66WXu!9-",
+	invalidToken := &Client{
+		Client: &http.Client{},
+		URL:    "http://localhost:8989",
+		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXu!9-",
 	}
 
 	tests := []struct {
 		name    string
 		args    args
-		want    *Server
+		want    *Client
 		wantErr bool
 	}{
 		{
@@ -76,13 +81,13 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewServer(tt.args.url, tt.args.token)
+			got, err := NewClient(tt.args.url, tt.args.token)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewServer() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewServer() = %v, want %v", got, tt.want)
+				t.Errorf("NewClient() = %v, want %v", got, tt.want)
 			}
 		})
 	}
