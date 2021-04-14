@@ -20,6 +20,7 @@ func NewClient(url, token string) (*Client, error) {
 	if !govalidator.IsURL(url) {
 		return nil, errors.New("invalid URL")
 	}
+
 	isValidToken, err := regexp.MatchString(`^[a-zzA-Z0-9\-\_]{32}$`, token)
 	if err != nil {
 		return nil, errors.New(
@@ -29,15 +30,17 @@ func NewClient(url, token string) (*Client, error) {
 	if !isValidToken {
 		return nil, errors.New("token provided is invalid")
 	}
-	err = testServerConnection(&Client{URL: url, Token: token})
-	if err != nil {
-		return nil, err
-	}
+
 	newClient := &Client{
 		Client: &http.Client{},
 		URL:    url,
 		Token:  token,
 	}
+	err = testServerConnection(newClient)
+	if err != nil {
+		return nil, err
+	}
+
 	return newClient, nil
 }
 
