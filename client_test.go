@@ -57,7 +57,7 @@ func TestNewClient(t *testing.T) {
 				url:   InvalidConnectionTest.URL,
 				token: InvalidConnectionTest.Token,
 			},
-			connectionTest,
+			nil,
 			true,
 		},
 		{
