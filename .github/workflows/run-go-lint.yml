@@ -18,6 +18,3 @@ jobs:
 
     - name: Liter
       uses: Jerome1337/golint-action@v1.0.2
-
-    - name: Test
-      run: go test 
