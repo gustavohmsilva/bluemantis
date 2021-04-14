@@ -1,4 +1,4 @@
-name: Go
+name: Run-Lint
 
 on:
   pull_request:
@@ -16,5 +16,5 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Liter
+    - name: Linter
       uses: Jerome1337/golint-action@v1.0.2
