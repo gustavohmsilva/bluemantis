@@ -2,6 +2,7 @@ package bluemantis
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -12,16 +13,27 @@ func TestNewClient(t *testing.T) {
 		token string
 	}
 
+	mockServer := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			auth := r.Header.Get("Authorization")
+			if auth != "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-" {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+		}),
+	)
+	defer mockServer.Close()
+
 	connectionTest := &Client{
 		Client: &http.Client{},
-		URL:    "http://localhost:8989",
+		URL:    mockServer.URL,
 		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
 	}
 
+	// Easy to miss, token is slightly off
 	InvalidConnectionTest := &Client{
 		Client: &http.Client{},
-		URL:    "http://localhost:8989",
-		Token:  "7-EtgZGHhpONO7shfeZXwKEX66WXuE9-",
+		URL:    mockServer.URL,
+		Token:  "7-AvtZGHhpONO7shfeZXwKEX66WXuE9-",
 	}
 
 	invalidURL := &Client{
@@ -30,9 +42,10 @@ func TestNewClient(t *testing.T) {
 		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
 	}
 
+	// Also slightly off, but because a rune is unnaceptable
 	invalidToken := &Client{
 		Client: &http.Client{},
-		URL:    "http://localhost:8989",
+		URL:    mockServer.URL,
 		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXu!9-",
 	}
 
