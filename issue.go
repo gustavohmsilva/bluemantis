@@ -1,5 +1,11 @@
 package bluemantis
 
+// Issue represents the basic structure that contains a client, the necessary
+// data to create the issue in MantisBT and a request-response pair, that will
+// hold the request sent/to be send to MantisBT and the response received/ to be
+// received by the MantisBT application. It should not be manually created. It
+// is preferred to be created with the NewIssue(), that receive the BaseIssue
+// and the ExtendedIssue structs.
 type Issue struct {
 	Client *Client
 	requestResponse
