@@ -17,6 +17,7 @@
 
 # MantisBT irrelevant files
 docker-compose.yml
+Local_environment_keys.txt
 config/
 custom/
 mysql/
