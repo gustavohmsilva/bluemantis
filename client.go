@@ -3,7 +3,6 @@ package bluemantis
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -53,42 +52,26 @@ func NewClient(url, token string) (*Client, error) {
 	return newClient, nil
 }
 
-func testServerConnection(c *Client) error {
-	testRequest, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("%s%s", c.URL, getMyUserInfo),
-		nil,
-	)
-	if err != nil {
-		return errors.New("problem contacting MantisBT server")
-	}
-	testRequest.Header.Add("Authorization", c.Token)
-	testResponse, err := c.Do(testRequest)
-	if err != nil {
-		return errors.New("problem contacting MantisBT server")
-
-	}
-	if testResponse.StatusCode != 200 {
-		return errors.New("the token isn't valid for this server")
-	}
-	return nil
-}
-
 // NewIssue will currently still being implemented, at the moment it creates
 // only a basic pointer to a Issue struct, without any of the actual necessary
 // data <- TODO
-func (c *Client) NewIssue() *Issue {
+func (c *Client) NewIssue(bascInfo *BaseIssue) *Issue {
+	_, err := govalidator.ValidateStruct(bascInfo)
+	if err != nil {
+		return nil
+	}
+
 	issue := new(Issue)
 	issue.Client = c
-	var err error
-	issue.requestResponse.request, err = http.NewRequest(
+	issue.BaseIssue = bascInfo
+
+	issue.request, err = http.NewRequest(
 		"POST",
 		fmt.Sprintf("%s%s", c.URL, newIssue),
 		nil,
 	)
 	if err != nil {
-		log.Print(err.Error())
-		return &Issue{}
+		return nil
 	}
 	issue.requestResponse.request.Header.Add(
 		"Authorization",
@@ -98,5 +81,6 @@ func (c *Client) NewIssue() *Issue {
 		"Content-Type",
 		"application/json",
 	)
+
 	return issue
 }
