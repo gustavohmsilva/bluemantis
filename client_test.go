@@ -1,11 +1,15 @@
 package bluemantis
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/go-test/deep"
 )
 
 func TestNewClient(t *testing.T) {
@@ -17,7 +21,7 @@ func TestNewClient(t *testing.T) {
 	mockServer := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
-			if auth != "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-" {
+			if auth != SAMPLETOKEN {
 				w.WriteHeader(http.StatusBadRequest)
 			}
 		}),
@@ -27,7 +31,7 @@ func TestNewClient(t *testing.T) {
 	connectionTest := &Client{
 		Client: &http.Client{},
 		URL:    mockServer.URL,
-		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
+		Token:  SAMPLETOKEN,
 	}
 
 	// Easy to miss, token is slightly off
@@ -97,11 +101,19 @@ func TestNewClient(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewClient(tt.args.url, tt.args.token)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewClient() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"NewClient() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewClient() = %v, want %v", got, tt.want)
+				t.Errorf(
+					"NewClient() = %v, want %v",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}
@@ -120,70 +132,75 @@ func TestClient_NewIssue(t *testing.T) {
 	validIssueClient := fields{
 		Client: &http.Client{},
 		URL:    "http://test.local/",
-		Token:  "SAMPLETOKEN",
+		Token:  SAMPLETOKEN,
 	}
 
-	baseRequest, _ := http.NewRequest(
-		"POST",
-		fmt.Sprintf("%s%s", validIssueClient.URL, newIssue),
-		nil,
-	)
-	baseRequest.Header.Add("Content-Type", "application/json")
-	baseRequest.Header.Add("Authorization", validIssueClient.Token)
-
-	validIssueBasicInfo := args{
-		bascInfo: &BaseIssue{
-			Summary:     "This is the summary",
-			Description: "This is the description",
-			Category: &Category{
-				Name: "This is the Category Name",
-			},
-			Project: &Project{
-				Name: "This is the Project Name",
-			},
+	baseIssue := &BaseIssue{
+		Summary:     SAMPLESUMMARY,
+		Description: SAMPLEDESCRIPTION,
+		Category: &Category{
+			Name: SAMPLECATEGORYNAME,
+		},
+		Project: &Project{
+			Name: SAMPLEPROJECTNAME,
 		},
 	}
 
+	validIssueBasicInfo := args{
+		bascInfo: baseIssue,
+	}
+	baseJSON, err := json.Marshal(baseIssue)
+	if err != nil {
+		panic(err)
+	}
+	baseRequest, _ := http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s%s", validIssueClient.URL, newIssue),
+		strings.NewReader(string(baseJSON)),
+	)
+	baseRequest.Header.Add("Content-Type", "application/json")
+	baseRequest.Header.Add("Authorization", SAMPLETOKEN)
+
 	MissingSummaryBasicInfo := args{
 		bascInfo: &BaseIssue{
-			Description: "This is the description",
+			Description: SAMPLEDESCRIPTION,
 			Category: &Category{
-				Name: "This is the Category Name",
+				Name: SAMPLECATEGORYNAME,
 			},
 			Project: &Project{
-				Name: "This is the Project Name",
+				Name: SAMPLEPROJECTNAME,
 			},
 		},
 	}
 
 	MissingDescriptionBasicInfo := args{
 		bascInfo: &BaseIssue{
-			Summary: "This is the summary",
+			Summary: SAMPLESUMMARY,
 			Category: &Category{
-				Name: "This is the Category Name",
+				Name: SAMPLECATEGORYNAME,
 			},
 			Project: &Project{
-				Name: "This is the Project Name",
+				Name: SAMPLEPROJECTNAME,
 			},
 		},
 	}
 
 	MissingCategoryBasicInfo := args{
 		bascInfo: &BaseIssue{
-			Summary:     "This is the summary",
-			Description: "This is the description",
+			Summary:     SAMPLESUMMARY,
+			Description: SAMPLEDESCRIPTION,
 			Project: &Project{
-				Name: "This is the Project Name",
+				Name: SAMPLEPROJECTNAME,
 			},
 		},
 	}
 
 	MissingProjectBasicInfo := args{
 		bascInfo: &BaseIssue{
-			Summary:     "This is the summary",
-			Description: "This is the description",
+			Summary:     SAMPLESUMMARY,
+			Description: SAMPLEDESCRIPTION,
 			Category: &Category{
-				Name: "This is the Category Name",
+				Name: SAMPLECATEGORYNAME,
 			},
 		},
 	}
@@ -202,19 +219,19 @@ func TestClient_NewIssue(t *testing.T) {
 				Client: &Client{
 					Client: &http.Client{},
 					URL:    validIssueClient.URL,
-					Token:  validIssueClient.Token,
+					Token:  SAMPLETOKEN,
 				},
 				requestResponse: requestResponse{
 					request: baseRequest,
 				},
 				BaseIssue: &BaseIssue{
-					Summary:     "This is the summary",
-					Description: "This is the description",
+					Summary:     SAMPLESUMMARY,
+					Description: SAMPLEDESCRIPTION,
 					Category: &Category{
-						Name: "This is the Category Name",
+						Name: SAMPLECATEGORYNAME,
 					},
 					Project: &Project{
-						Name: "This is the Project Name",
+						Name: SAMPLEPROJECTNAME,
 					},
 				},
 			},
@@ -247,8 +264,13 @@ func TestClient_NewIssue(t *testing.T) {
 				URL:    tt.fields.URL,
 				Token:  tt.fields.Token,
 			}
-			if got := c.NewIssue(tt.args.bascInfo); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.NewIssue() = %v, want %v", got, tt.want)
+			got := c.NewIssue(tt.args.bascInfo)
+			if diff := deep.Equal(got, tt.want); diff != nil {
+				t.Errorf(
+					"Client.NewIssue() = %v, want %v",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}

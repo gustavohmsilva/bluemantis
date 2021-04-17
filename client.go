@@ -1,10 +1,12 @@
 package bluemantis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 )
@@ -65,22 +67,20 @@ func (c *Client) NewIssue(bascInfo *BaseIssue) *Issue {
 	issue.Client = c
 	issue.BaseIssue = bascInfo
 
-	issue.request, err = http.NewRequest(
-		"POST",
-		fmt.Sprintf("%s%s", c.URL, newIssue),
-		nil,
-	)
+	body, err := json.Marshal(issue.BaseIssue)
 	if err != nil {
 		return nil
 	}
-	issue.requestResponse.request.Header.Add(
-		"Authorization",
-		c.Token,
+	issue.request, _ = http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s%s", c.URL, newIssue),
+		strings.NewReader(string(body)),
 	)
 	issue.requestResponse.request.Header.Add(
 		"Content-Type",
 		"application/json",
 	)
+	issue.requestResponse.request.Header.Add("Authorization", c.Token)
 
 	return issue
 }
