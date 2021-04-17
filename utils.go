@@ -26,12 +26,3 @@ func testServerConnection(c *Client) error {
 	}
 	return nil
 }
-
-/*
-func testBaseIssue(bi *BaseIssue) []error {
-	bi.Category
-	bi.Description
-	bi.Project
-	bi.
-}
-*/
