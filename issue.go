@@ -1,6 +1,9 @@
 package bluemantis
 
-import "errors"
+import (
+	"errors"
+	"reflect"
+)
 
 // Issue represents the basic structure that contains a client, the necessary
 // data to create the issue in MantisBT and a request-response pair, that will
@@ -23,10 +26,10 @@ type Category Rel
 // report to MantisBT using the package BlueMantis. Please notice that all of
 // the data must be set, including the minimal data from Category and Project.
 type BaseIssue struct {
-	Summary     string    `valid:"required"`
-	Description string    `valid:"required"`
-	Category    *Category `valid:"required"`
-	Project     *Project  `valid:"required"`
+	Summary     string    `valid:"required" json:"summary"`
+	Description string    `valid:"required" json:"description"`
+	Category    *Category `valid:"required" json:"category"`
+	Project     *Project  `valid:"required" json:"project"`
 }
 
 // Send do a immediate request to the MantisBT server using the information in
@@ -34,13 +37,14 @@ type BaseIssue struct {
 // not. If anything other than 201 is returned, or if the connection fail for
 // some reason, it will return an error.
 func (i *Issue) Send() error {
-	if i == nil {
-		return errors.New("can't to submit, invalid issue")
+	if reflect.DeepEqual(i, &Issue{}) {
+		return errors.New("can't submit, invalid issue")
 	}
+
 	var err error
 	i.response, err = i.Client.Do(i.request)
 	if err != nil || i.response.StatusCode != 201 {
-		return errors.New("can't to submit, error contacting server")
+		return errors.New("can't submit, error contacting server")
 	}
 	return nil
 }
