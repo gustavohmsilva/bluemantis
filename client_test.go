@@ -99,7 +99,11 @@ func TestNewClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewClient(tt.args.url, tt.args.token)
+			got, err := NewClient(
+				tt.args.url,
+				tt.args.token,
+				"@every 15m",
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
 					"NewClient() error = %v, wantErr %v",
@@ -138,7 +142,7 @@ func TestClient_NewIssue(t *testing.T) {
 	baseIssue := &BaseIssue{
 		Summary:     SAMPLESUMMARY,
 		Description: SAMPLEDESCRIPTION,
-		Category: &Category{
+		Category: &Rel{
 			Name: SAMPLECATEGORYNAME,
 		},
 		Project: &Project{
@@ -164,7 +168,7 @@ func TestClient_NewIssue(t *testing.T) {
 	MissingSummaryBasicInfo := args{
 		bascInfo: &BaseIssue{
 			Description: SAMPLEDESCRIPTION,
-			Category: &Category{
+			Category: &Rel{
 				Name: SAMPLECATEGORYNAME,
 			},
 			Project: &Project{
@@ -176,7 +180,7 @@ func TestClient_NewIssue(t *testing.T) {
 	MissingDescriptionBasicInfo := args{
 		bascInfo: &BaseIssue{
 			Summary: SAMPLESUMMARY,
-			Category: &Category{
+			Category: &Rel{
 				Name: SAMPLECATEGORYNAME,
 			},
 			Project: &Project{
@@ -199,7 +203,7 @@ func TestClient_NewIssue(t *testing.T) {
 		bascInfo: &BaseIssue{
 			Summary:     SAMPLESUMMARY,
 			Description: SAMPLEDESCRIPTION,
-			Category: &Category{
+			Category: &Rel{
 				Name: SAMPLECATEGORYNAME,
 			},
 		},
@@ -227,7 +231,7 @@ func TestClient_NewIssue(t *testing.T) {
 				BaseIssue: &BaseIssue{
 					Summary:     SAMPLESUMMARY,
 					Description: SAMPLEDESCRIPTION,
-					Category: &Category{
+					Category: &Rel{
 						Name: SAMPLECATEGORYNAME,
 					},
 					Project: &Project{
