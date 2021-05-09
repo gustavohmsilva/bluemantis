@@ -1,4 +1,4 @@
-module bluemantis
+module github.com/gustavohmsilva/bluemantis
 
 go 1.16
 
