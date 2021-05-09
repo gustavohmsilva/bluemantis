@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/robfig/cron"
 )
 
 func TestNewClient(t *testing.T) {
 	type args struct {
-		url   string
-		token string
+		url               string
+		token             string
+		Scheduler         *cron.Cron
+		SchedulerInterval string
 	}
 
 	mockServer := httptest.NewServer(
@@ -29,29 +31,37 @@ func TestNewClient(t *testing.T) {
 	defer mockServer.Close()
 
 	connectionTest := &Client{
-		Client: &http.Client{},
-		URL:    mockServer.URL,
-		Token:  SAMPLETOKEN,
+		Client:            &http.Client{},
+		URL:               mockServer.URL,
+		Token:             SAMPLETOKEN,
+		Scheduler:         cron.New(),
+		SchedulerInterval: "@every 15m",
 	}
 
 	// Easy to miss, token is slightly off
 	InvalidConnectionTest := &Client{
-		Client: &http.Client{},
-		URL:    mockServer.URL,
-		Token:  "7-AvtZGHhpONO7shfeZXwKEX66WXuE9-",
+		Client:            &http.Client{},
+		URL:               mockServer.URL,
+		Token:             "7-AvtZGHhpONO7shfeZXwKEX66WXuE9-",
+		Scheduler:         cron.New(),
+		SchedulerInterval: "@every 15m",
 	}
 
 	invalidURL := &Client{
-		Client: &http.Client{},
-		URL:    "htxp://notavalid.domainname/",
-		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
+		Client:            &http.Client{},
+		URL:               "htxp://notavalid.domainname/",
+		Token:             "7-EtgZGHhpONO7shfeZXxKEX66WXuE9-",
+		Scheduler:         cron.New(),
+		SchedulerInterval: "@every 15m",
 	}
 
 	// Also slightly off, but because a rune is unnaceptable
 	invalidToken := &Client{
-		Client: &http.Client{},
-		URL:    mockServer.URL,
-		Token:  "7-EtgZGHhpONO7shfeZXxKEX66WXu!9-",
+		Client:            &http.Client{},
+		URL:               mockServer.URL,
+		Token:             "7-EtgZGHhpONO7shfeZXxKEX66WXu!9-",
+		Scheduler:         cron.New(),
+		SchedulerInterval: "@every 15m",
 	}
 
 	tests := []struct {
@@ -112,7 +122,7 @@ func TestNewClient(t *testing.T) {
 				)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if diff := deep.Equal(got, tt.want); diff != nil {
 				t.Errorf(
 					"NewClient() = %v, want %v",
 					got,
@@ -125,18 +135,22 @@ func TestNewClient(t *testing.T) {
 
 func TestClient_NewIssue(t *testing.T) {
 	type fields struct {
-		Client *http.Client
-		URL    string
-		Token  string
+		Client            *http.Client
+		URL               string
+		Token             string
+		Scheduler         *cron.Cron
+		SchedulerInterval string
 	}
 	type args struct {
 		bascInfo *BaseIssue
 	}
 
 	validIssueClient := fields{
-		Client: &http.Client{},
-		URL:    "http://test.local/",
-		Token:  SAMPLETOKEN,
+		Client:            &http.Client{},
+		URL:               "http://test.local/",
+		Token:             SAMPLETOKEN,
+		Scheduler:         nil,
+		SchedulerInterval: "",
 	}
 
 	baseIssue := &BaseIssue{
