@@ -15,21 +15,37 @@ type Issue struct {
 	Client *Client
 	requestResponse
 	*BaseIssue
+	*ExtendedIssue
 }
-
-// Category represents a specific type of Rel (relation). This should probably
-// be deprecated soon as the package increase size, because the relations will
-// differ a little bit more than just ID, Name and Label.
-type Category Rel
 
 // BaseIssue represent the minimal information required to submit a valid issue
 // report to MantisBT using the package BlueMantis. Please notice that all of
 // the data must be set, including the minimal data from Category and Project.
 type BaseIssue struct {
-	Summary     string    `valid:"required" json:"summary"`
-	Description string    `valid:"required" json:"description"`
-	Category    *Category `valid:"required" json:"category"`
-	Project     *Project  `valid:"required" json:"project"`
+	// Summary: We recommend putting your err.Error() here
+	Summary string `valid:"required" json:"summary"`
+	// Description: We recommend you put the object transited at the moment
+	// of the error here in a serialized format (JSON)
+	Description string   `valid:"required" json:"description"`
+	Category    *Rel     `valid:"required" json:"category"`
+	Project     *Project `valid:"required" json:"project"`
+}
+
+// ExtendedIssue represent the complete (not including history atm) information
+// recommended to submit a valid issue report to MantisBT using the package
+// BlueMantis. Please notice that all of this data is optional, and Mantis will
+// normally assign default values for all of this relations. You should use name
+// if you don't know a object given ID. Do not use label for this.
+type ExtendedIssue struct {
+	Status          *Status   `valid:"-" json:"status"`
+	Reporter        *Reporter `valid:"-" json:"reporter"`
+	Resolution      *Rel      `valid:"-" json:"resolution"`
+	ViewState       *Rel      `valid:"-" json:"view_state"`
+	Priority        *Rel      `valid:"-" json:"priority"`
+	Severity        *Rel      `valid:"-" json:"severity"`
+	Reproducibility *Rel      `valid:"-" json:"reproducibility"`
+	Sticky          bool      `valid:"-" json:"sticky"`
+	Meta
 }
 
 // Send do a immediate request to the MantisBT server using the information in
@@ -47,4 +63,26 @@ func (i *Issue) Send() error {
 		return errors.New("can't submit, error contacting server")
 	}
 	return nil
+}
+
+// Retry do a second attempt of a immediate request to the MantisBT server using
+// the same information used before. Best used together with Send, like:
+// newIssue.Send().Retry().RetryLater()
+func (i *Issue) Retry(err error) error {
+	if err == nil {
+		return nil
+	}
+	return i.Send()
+}
+
+// RetryLater will schedule using CRON a new execution of the function send,
+// using as a delay value the configuration informed when creating a MantisBT
+// client.
+func (i *Issue) RetryLater(err error) {
+	if err == nil {
+		return
+	}
+	i.Client.Scheduler.AddFunc(i.Client.SchedulerInterval, func() {
+		i.Send()
+	})
 }

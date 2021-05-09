@@ -22,6 +22,7 @@ It is also a good point to check out the [wiki tab](https://github.com/gustavohm
     btClient := bluemantis.NewClient(   
         "http://localhost:8989",
         "AAaaBBbbCCccDDddEEeeFFffGGgg--__",
+        "@every 15m",
     )
 
     btProject, err := bt.GetProject("Empty Project Alpha")
@@ -36,7 +37,7 @@ It is also a good point to check out the [wiki tab](https://github.com/gustavohm
             Category:       "Critical",
             Project:        btProject,
         },
-    ).Send().Retry().Delay()
+    ).Send().Retry().RetryLater()
 ...
 ```   
 *currently! This is in VERY early development, and no function naming or style has been set on stone yet.

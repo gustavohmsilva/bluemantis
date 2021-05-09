@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/robfig/cron"
 )
 
 // Client represents the basic structure that contains the configuration needed
@@ -17,8 +18,10 @@ import (
 // to create a valid and most importantly, tested, Client.
 type Client struct {
 	*http.Client
-	URL   string
-	Token string
+	URL               string
+	Token             string
+	Scheduler         *cron.Cron
+	SchedulerInterval string
 }
 
 // NewClient creates and test (including the connection) with a MantisBT server
@@ -26,7 +29,7 @@ type Client struct {
 // application. In case of a invalid URL, invalid Token, or communication
 // failure with the MantisBT desired installation, it will return nil and a
 // descriptive error with the problem.
-func NewClient(url, token string) (*Client, error) {
+func NewClient(url, token string, delayInterval string) (*Client, error) {
 	if !govalidator.IsURL(url) {
 		return nil, errors.New("invalid URL")
 	}
@@ -42,15 +45,17 @@ func NewClient(url, token string) (*Client, error) {
 	}
 
 	newClient := &Client{
-		Client: &http.Client{},
-		URL:    url,
-		Token:  token,
+		Client:            &http.Client{},
+		URL:               url,
+		Token:             token,
+		Scheduler:         cron.New(),
+		SchedulerInterval: delayInterval,
 	}
 	err = testServerConnection(newClient)
 	if err != nil {
 		return nil, err
 	}
-
+	newClient.Scheduler.Start()
 	return newClient, nil
 }
 
