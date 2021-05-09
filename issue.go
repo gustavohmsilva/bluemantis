@@ -75,7 +75,9 @@ func (i *Issue) Retry(err error) error {
 	return i.Send()
 }
 
-// RetryLater will schedule
+// RetryLater will schedule using CRON a new execution of the function send,
+// using as a delay value the configuration informed when creating a MantisBT
+// client.
 func (i *Issue) RetryLater(at string) {
 	i.Client.Scheduler.AddFunc(i.Client.SchedulerInterval, func() {
 		i.Send()
